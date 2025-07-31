@@ -1,0 +1,21 @@
+name: assembly
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - flye>=2.9
+  - rasusa
+  - seqkit
+  - medaka
+  - prokka
+  - bakta
+  - roary
+  - hybracter
+  - unicycler
+  - mummer4
+  - amrfinder
+  - autocycler_with_assemblers
+  - autocycler
+  - bandage
+  - dorado
