@@ -21,8 +21,9 @@ nextflow run main.nf --inputFastq_ONT <input_long_reads_dir/> \
 --work-dir <path_to_dir_to_store_work_directory> \
 -profile conda \
 -resume \
--with-dag \ #optional extra run reports
--with-timeline \ #optional extra run reports
+-log <log_name> \ .nextflow.log created by default
 -with-report \ #optional extra run reports
 -with-trace  #optional extra run reports
+-with-timeline \ #optional extra run reports
+-with-dag \ #optional extra run reports
 ```
