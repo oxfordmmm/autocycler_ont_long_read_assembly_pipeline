@@ -1,0 +1,36 @@
+# Nextflow artifacts
+.nextflow*
+work/
+.singularity/
+.cache/
+*.dot
+
+# Logs and backups
+*.log*
+*.save*
+
+# Conda/virtualenv
+.venv/
+*.env
+*.conda
+
+# Outputs and intermediate results
+assemblies/
+assembly_QC/
+summaries/
+checkm2_initial/
+contamination/
+raw_QC_CSVs/
+subsamples/
+failed_assemblies/
+manual_assemblies/
+AMRFinderPlus/
+MLST/
+MOB_suite/
+bakta/
+kraken2/
+test_reads/
+autocycler_rerun_test/
+
+# Mac/Linux artifacts
+.DS_Store
