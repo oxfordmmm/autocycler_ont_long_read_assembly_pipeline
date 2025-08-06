@@ -134,7 +134,7 @@ process BAKTA {
 
     conda = "${projectDir}/envs/bakta.yml"
     tag {sample + ' ' + assembler}
-    errorStrategy 'ignore'
+    errorStrategy 'retry'
     publishDir "${params.outdir}/bakta/${assembler}", mode: 'copy'
 
     cpus 16
@@ -163,7 +163,7 @@ process BAKTA {
 process AMRFINDERPLUS {
 
     conda = "${projectDir}/envs/amrfinder.yml"
-    errorStrategy 'ignore'
+    errorStrategy 'retry'
     tag {sample + ' ' + assembler}
     cpus 2     //cpus set to low number as not enough RAM on VMs for blast search if >4 multi-threading and get segmentation fault
 
