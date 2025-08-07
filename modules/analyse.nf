@@ -150,7 +150,8 @@ process BAKTA {
 
     script:
     """
-    bakta --db ${params.databasesDir}/bin/bakta_db_v6/db -t ${task.cpus} --prefix ${sample} -o ${sample}_bakta/ assembly.fasta
+    # Add min contig length option to avoid errors from too short contigs. default 1, vs 200 in -compliant mode, but 5 avoids errors, while minimising chance of loss of annotations
+    bakta --db ${params.databasesDir}/bin/bakta_db_v6/db -t ${task.cpus} --prefix ${sample} -o ${sample}_bakta/ assembly.fasta --min-contig-length 5
     """
     stub:
     """
@@ -163,7 +164,9 @@ process BAKTA {
 process AMRFINDERPLUS {
 
     conda = "${projectDir}/envs/amrfinder.yml"
-    errorStrategy 'retry'
+    errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
+    maxRetries 5
+    
     tag {sample + ' ' + assembler}
     cpus 2     //cpus set to low number as not enough RAM on VMs for blast search if >4 multi-threading and get segmentation fault
 
