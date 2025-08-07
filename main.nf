@@ -18,7 +18,6 @@ include {AUTOCYCLER_ASSEMBLE_RAVEN} from './modules/assemble.nf'
 include {AUTOCYCLER_ASSEMBLE_PLASSEMBLER} from './modules/assemble.nf'
 include {CHECKM2_INPUT_ASSEMBLIES} from './modules/assemble.nf'
 include {AUTOCYCLER_COMPRESS} from './modules/assemble.nf'
-include {PUBLISH_FAILED_CONSENSUS} from './modules/assemble.nf'
 include {MEDAKA_FULL} from './modules/assemble.nf'
 include {SEQKIT} from './modules/analyse.nf'
 include {CHECKM2_CONSENSUS} from './modules/analyse.nf'
@@ -31,6 +30,7 @@ include {MOB_SUITE} from './modules/analyse.nf'
 include {SUMMARISE_RAWQC} from './modules/summarise.nf'
 include {SUMMARISE_CONTAMINATED} from './modules/summarise.nf'
 include {SUMMARISE_INPUT_ASSEMBLY_QC} from './modules/summarise.nf'
+include {SUMMARISE_AUTOCYCLER_METRICS} from './modules/summarise.nf'
 include {SUMMARISE_CONSENSUS_ASSEMBLY_CHECKM2} from './modules/summarise.nf'
 include {SUMMARISE_CONSENSUS_ASSEMBLY_SEQKIT} from './modules/summarise.nf'
 include {SUMMARISE_MLST} from './modules/summarise.nf'
@@ -98,15 +98,11 @@ workflow {
     AUTOCYCLER_COMPRESS(flattened_assemblies)
 
     //FILTER out failed Autocycler consensus assemblies where >100 unitigs
-    // use channel with all outputs to make publishing failed assemblies easier
+    // use channel with all outputs as remnant of old filtering step based on contig  umber, but this is not foolproof to filter out failed assemblies, and now replaced by adding --min-contig-length option to bakta to overcome issue
     successful_consensus_assemblies_ch = AUTOCYCLER_COMPRESS.out.all
-        .filter { sample, assembler, consensus_assembly_fasta, consensus_assembly_gfa, consensus_assembly_fol, consensus_assembly_metrics, unitigs_num -> unitigs_num.text.trim().toFloat() < 100.0}
         .map { sample, assembler, consensus_assembly_fasta, consensus_assembly_gfa, consensus_assembly_fol, consensus_assembly_metrics, unitigs_num -> tuple(sample, assembler, consensus_assembly_fasta) }
 
-    failed_consensus_assemblies_ch = AUTOCYCLER_COMPRESS.out.all
-        .filter { sample, assembler, consensus_assembly_fasta, consensus_assembly_gfa, consensus_assembly_fol, consensus_assembly_metrics, unitigs_num -> unitigs_num.text.trim().toFloat() >= 100.0}
-    PUBLISH_FAILED_CONSENSUS(failed_consensus_assemblies_ch)
-
+ 
     // Add in manual assemblies for those where autocycler consensus failed and manual intervention needed
     // MANUAL INPUT CHANNELS:
     Channel.fromPath( "${params.manual_assembies}/*.fasta" )
@@ -150,15 +146,19 @@ workflow {
     all_input_assemblies_qc_ch = CHECKM2_INPUT_ASSEMBLIES.out.tsv.collect()
     SUMMARISE_INPUT_ASSEMBLY_QC(all_input_assemblies_qc_ch)
     
-     // 3a. Consensus assembly (Medaka polished) QC - Seqkit stats
+
+    // 3a. Autocycler metrics
+    all_autocycler_metrics_ch = AUTOCYCLER_COMPRESS.out.metrics.collect()
+    SUMMARISE_AUTOCYCLER_METRICS(all_autocycler_metrics_ch)
+
+
+     // 3b. Consensus assembly (Medaka polished) QC - Seqkit stats
     all_consensus_seqkit_ch = SEQKIT.out.collect()
     SUMMARISE_CONSENSUS_ASSEMBLY_SEQKIT(all_consensus_seqkit_ch)
- 
-    // 3b. Consensus assembly (Medaka polished) QC- CheckM2
+
+    // 3c. Consensus assembly (Medaka polished) QC- CheckM2
     all_consensus_checkm2_ch = CHECKM2_CONSENSUS.out.collect()
     SUMMARISE_CONSENSUS_ASSEMBLY_CHECKM2(all_consensus_checkm2_ch)
- 
-    // 3c. Failed assemblies
 
 
     // 4. MLST
