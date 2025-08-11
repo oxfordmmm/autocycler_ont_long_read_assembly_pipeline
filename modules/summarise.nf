@@ -104,6 +104,43 @@ process SUMMARISE_INPUT_ASSEMBLY_QC {
     return script
 }
 
+
+process SUMMARISE_AUTOCYCLER_METRICS {
+
+    tag { "autocycler_metrics_summary" }
+    publishDir "${params.outdir}/summaries", mode: 'copy', pattern: "autocycler_metrics_summary.tsv"
+
+    input:
+    val(input_tuples)
+
+    output:
+    path("autocycler_metrics_summary.tsv")
+
+    script:
+    def n = input_tuples.size()
+    if (n % 3 != 0)
+        throw new IllegalArgumentException("Expected flat list of 3-tuples, but got ${n} items.")
+
+    def tmp_lines = []
+    for (int i = 0; i < n; i += 3) {
+        def sample = input_tuples[i]
+        def assembler = input_tuples[i + 1]
+        def tsv = input_tuples[i + 2].toString().replace('$', '\\$')
+        tmp_lines << """tail -n +2 "${tsv}" | awk -v s="${sample}" -v a="${assembler}" 'BEGIN{OFS="\\t"} {print s, a, \$0}'"""
+    }
+
+    def script = """
+    head -n 1 "${input_tuples[2]}" | awk 'BEGIN{OFS="\\t"} {print "sample", "assembler", \$0}' > autocycler_metrics_summary.tsv
+    {
+    ${tmp_lines.join('\n')}
+    } | sort -k2,2 -k1,1 >> autocycler_metrics_summary.tsv
+    """
+
+    return script
+}
+
+
+
 process SUMMARISE_CONSENSUS_ASSEMBLY_SEQKIT {
 
     tag { "consensus_seqkit_summary" }
