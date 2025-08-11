@@ -161,7 +161,7 @@ process AUTOCYCLER_ASSEMBLE_CANU {
 
     conda = "${projectDir}/envs/autocycler_v5_with_assemblers.yml"
     tag {sample + ' ' + number}
-    cpus 16
+    cpus 8
 
     publishDir "${params.outdir}/assemblies/canu_01", pattern: "*01.fasta", mode: "copy", saveAs: { filename -> "${sample}_canu_01.fasta"}
     publishDir "${params.outdir}/assemblies/canu_02", pattern: "*02.fasta", mode: "copy", saveAs: { filename -> "${sample}_canu_02.fasta"}
