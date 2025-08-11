@@ -165,11 +165,10 @@ process AMRFINDERPLUS {
 
     conda = "${projectDir}/envs/amrfinder.yml"
     errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
-    maxRetries 5
-    
+    maxRetries 5    
+    memory { 1.GB * (0.8 + (task.attempt / 5)) }  
     tag {sample + ' ' + assembler}
-    cpus 2     //cpus set to low number as not enough RAM on VMs for blast search if >4 multi-threading and get segmentation fault
-
+    cpus 2  //cpus set to low number as not enough RAM on VMs for blast search if >4 multi-threading and get segmentation fault 
     publishDir "${params.outdir}/AMRFinderPlus/${assembler}", mode: 'copy'
 
     input:
@@ -181,31 +180,30 @@ process AMRFINDERPLUS {
     script:
     """
     # Convert assembly header line to be in format '>contig_1' instead of '>1'
-    awk '/^>/{print ">contig_" ++i; next} {print}' assembly.fasta > amrfinder_input_assembly.fasta
-
+    awk '/^>/{print ">contig_" ++i; next} {print}' assembly.fasta > amrfinder_input_assembly.fasta 
+    
     species=\$(<species.txt)
 
     if [[ \$species == Escherichia* ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Escherichia -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annot>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Escherichia -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
 
     elif [[ \$species == "Klebsiella pneumoniae" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Klebsiella_pneumoniae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Klebsiella_pneumoniae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     elif [[ \$species == "Klebsiella oxytoca" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Klebsiella_oxytoca -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 >
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Klebsiella_oxytoca -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     elif [[ \$species == "Enterobacter cloacae" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Enterobacter_cloacae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Enterobacter_cloacae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     elif [[ \$species == "Enterobacter asburiae" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Enterobacter_absuriae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Enterobacter_absuriae -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     elif [[ \$species == "Citrobacter freundii" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Citrobacter_freundii -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Citrobacter_freundii -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     elif [[ \$species == "Serratia marcescens" ]]; then
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Serratia_marcescens -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -O Serratia_marcescens -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     else
-        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format ba>
+        amrfinder --nucleotide amrfinder_input_assembly.fasta --protein assembly.faa --gff assembly.gff3 -o ${sample}.tsv --plus -d ${params.databasesDir}/bin/amrfinder_db/2024-12-18.1 --annotation_format bakta --threads ${task.cpus}
     fi
     """
 }
-
 
 
 process MOB_SUITE {
